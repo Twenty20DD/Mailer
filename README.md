@@ -3,17 +3,17 @@
 
 ## Mailer Package
 
-A multi-provider mailer package for SendGrid, Amazon SES.
+A multi-provider mailer package supporting SendGrid and Amazon SES.
 
 ### Installation
 
-You can install the package via composer:
+Install the package via Composer:
 
 ```bash
 composer require twenty20/mailer
 ```
 
-After composer, you can run the following command, this will install everything you need.
+Once installed, run the following command to complete the setup:
 
 ```bash
 php artisan mailer:install
@@ -21,8 +21,8 @@ php artisan mailer:install
 
 ### Usage
 
-Once the installer is complete, simply add your API key for your choosen provider to the `.env` and you're all set.
-Send emails and notifications as you would normally within your Laravel app.
+After installation, add your chosen provider’s API key to the .env file, and you’re good to go.
+You can then send emails and notifications as usual within your Laravel application.
 
 ---
 
