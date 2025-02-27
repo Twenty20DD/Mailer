@@ -26,16 +26,16 @@ class Mailer
         }
     }
 
-    public function sendMail(string $to, string $from, string $subject, string $body, array $cc = [], array $bcc = [], array $replyTo = [])
+    public function sendMail(string $to, string $from, string $subject, string $body, array $cc = [], array $bcc = [], array $replyTo = [], array $metadata = [])
     {
         return match ($this->provider) {
-            'sendgrid' => $this->sendViaSendGrid($to, $from, $subject, $body, $cc, $bcc, $replyTo),
+            'sendgrid' => $this->sendViaSendGrid($to, $from, $subject, $body, $cc, $bcc, $replyTo, $metadata),
             // 'amazon_ses' => $this->sendViaAmazonSes($to, $from, $subject, $body, $cc, $bcc, $replyTo),
             default => throw new \RuntimeException("Unsupported provider [{$this->provider}]."),
         };
     }
 
-    protected function sendViaSendGrid(string $to, string $from, string $subject, string $body, array $cc, array $bcc, array $replyTo)
+    protected function sendViaSendGrid(string $to, string $from, string $subject, string $body, array $cc, array $bcc, array $replyTo, array $metadata)
     {
         $email = new SendGridMail();
         $email->setFrom($from);
@@ -43,6 +43,7 @@ class Mailer
         $email->addTo($to);
         $email->addContent('text/plain', strip_tags($body));
         $email->addContent('text/html', $body);
+        $email->addCustomArg('sent_via', json_encode($metadata));
 
         foreach ($cc as $ccEmail) {
             $email->addCc($ccEmail);
