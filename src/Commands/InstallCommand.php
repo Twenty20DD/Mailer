@@ -154,7 +154,6 @@ class InstallCommand extends Command
 
             $fileContents = str_replace('NamespacePlaceholder', 'App\Events', $fileContents);
 
-            // Remove .stub extension from filename
             $fileName = pathinfo($file->getFilename(), PATHINFO_FILENAME);
             $fileName = str_replace('.stub', '', $fileName);
 
@@ -171,7 +170,6 @@ class InstallCommand extends Command
 
             $fileContents = str_replace('NamespacePlaceholder', 'App\Listeners', $fileContents);
 
-            // Remove .stub extension from filename
             $fileName = pathinfo($file->getFilename(), PATHINFO_FILENAME);
             $fileName = str_replace('.stub', '', $fileName);
 

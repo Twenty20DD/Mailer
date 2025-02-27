@@ -30,7 +30,7 @@ class Mailer
     {
         return match ($this->provider) {
             'sendgrid' => $this->sendViaSendGrid($to, $from, $subject, $body, $cc, $bcc, $replyTo),
-            'amazon_ses' => $this->sendViaAmazonSes($to, $from, $subject, $body, $cc, $bcc, $replyTo),
+            // 'amazon_ses' => $this->sendViaAmazonSes($to, $from, $subject, $body, $cc, $bcc, $replyTo),
             default => throw new \RuntimeException("Unsupported provider [{$this->provider}]."),
         };
     }
@@ -67,44 +67,44 @@ class Mailer
         return $response->json();
     }
 
-    protected function sendViaAmazonSes(string $to, string $from, string $subject, string $body, array $cc, array $bcc, array $replyTo)
-    {
-        $sdk = new \Aws\Sdk([
-            'region' => $this->providerConfig['region'] ?? 'us-east-1',
-            'version' => 'latest',
-            'credentials' => [
-                'key' => $this->providerConfig['api_key'] ?? '',
-                'secret' => $this->providerConfig['api_secret'] ?? '',
-            ],
-        ]);
+    // protected function sendViaAmazonSes(string $to, string $from, string $subject, string $body, array $cc, array $bcc, array $replyTo)
+    // {
+    //     $sdk = new \Aws\Sdk([
+    //         'region' => $this->providerConfig['region'] ?? 'us-east-1',
+    //         'version' => 'latest',
+    //         'credentials' => [
+    //             'key' => $this->providerConfig['api_key'] ?? '',
+    //             'secret' => $this->providerConfig['api_secret'] ?? '',
+    //         ],
+    //     ]);
 
-        $sesClient = $sdk->createSes();
+    //     $sesClient = $sdk->createSes();
 
-        $message = [
-            'Source' => $from,
-            'Destination' => [
-                'ToAddresses' => [$to],
-                'CcAddresses' => $cc,
-                'BccAddresses' => $bcc,
-            ],
-            'ReplyToAddresses' => $replyTo,
-            'Message' => [
-                'Subject' => [
-                    'Data' => $subject,
-                ],
-                'Body' => [
-                    'Text' => [
-                        'Data' => strip_tags($body),
-                    ],
-                    'Html' => [
-                        'Data' => $body,
-                    ],
-                ],
-            ],
-        ];
+    //     $message = [
+    //         'Source' => $from,
+    //         'Destination' => [
+    //             'ToAddresses' => [$to],
+    //             'CcAddresses' => $cc,
+    //             'BccAddresses' => $bcc,
+    //         ],
+    //         'ReplyToAddresses' => $replyTo,
+    //         'Message' => [
+    //             'Subject' => [
+    //                 'Data' => $subject,
+    //             ],
+    //             'Body' => [
+    //                 'Text' => [
+    //                     'Data' => strip_tags($body),
+    //                 ],
+    //                 'Html' => [
+    //                     'Data' => $body,
+    //                 ],
+    //             ],
+    //         ],
+    //     ];
 
-        $result = $sesClient->sendEmail($message);
+    //     $result = $sesClient->sendEmail($message);
 
-        return $result->toArray();
-    }
+    //     return $result->toArray();
+    // }
 }
