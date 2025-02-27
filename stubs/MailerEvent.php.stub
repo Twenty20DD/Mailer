@@ -1,6 +1,6 @@
 <?php
 
-namespace Twenty20\Mailer\Models;
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
