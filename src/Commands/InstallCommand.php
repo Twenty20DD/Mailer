@@ -17,9 +17,10 @@ class InstallCommand extends Command
 
     public function handle()
     {
+        // 'Amazon SES'
         $provider = select(
             label: 'Which provider would you like to use?',
-            options: ['SendGrid', 'Amazon SES'],
+            options: ['SendGrid'],
             default: 'SendGrid',
         );
 
@@ -30,9 +31,9 @@ class InstallCommand extends Command
             case 'sendgrid':
                 $this->runComposerRequire('sendgrid/sendgrid');
                 break;
-            case 'amazon ses':
-                $this->runComposerRequire('aws/aws-sdk-php');
-                break;
+            // case 'amazon ses': TODO
+            //     $this->runComposerRequire('aws/aws-sdk-php');
+            //     break;
             default:
                 warning("Unknown provider [{$provider}]. Defaulting to SendGrid.");
                 $provider = 'SendGrid';
@@ -46,8 +47,14 @@ class InstallCommand extends Command
             '--force' => true,
         ]);
 
-        // Publish MailerEvent Model
-        $this->publishMailerEventModel();
+        // Publish WebhookController
+        $this->publishMailerController();
+
+        // Publish Events and Listeners
+        $this->publishEventsListeners();
+
+        //Publish Routes
+        $this->publishRoutes();
 
         // Inject `twenty20` mailer into Laravel’s config/mail.php
         $this->updateMailConfig();
@@ -59,10 +66,17 @@ class InstallCommand extends Command
         $this->updateEnv($provider);
 
         // Run migrations
-        $this->call('migrate');
+        $this->callSilent('migrate');
 
-        info('Installation completed.');
-        info('Set your API keys in .env and start sending emails!');
+        $this->callSilent('optimize:clear');
+
+        $this->callSilent('cache:clear');
+
+        $this->callSilent('config:clear');
+
+        $this->callSilent('route:clear');
+
+        info('🎉 Installation completed. Set your API keys in .env and start sending emails!');
     }
 
     protected function runComposerRequire($package)
@@ -72,24 +86,72 @@ class InstallCommand extends Command
         passthru($command);
     }
 
-    protected function publishMailerEventModel()
+    protected function publishRoutes()
     {
-        $modelPath = app_path('Models/MailerEvent.php');
-        $packageModelPath = __DIR__.'/../../stubs/MailerEvent.php.stub';
+        $routesPath = base_path('routes/web.php');
+        $packageRoutesPath = __DIR__.'/routes/web.php';
 
-        if (File::exists($modelPath)) {
-            warning("MailerEvent model already exists in app/Models. Skipping.");
+        if (File::exists($routesPath)) {
+            warning("Webhook route already exists in routes/web.php. Skipping.");
             return;
         }
 
-        if (!File::exists($packageModelPath)) {
-            warning("Stub for MailerEvent model not found. Skipping.");
+        if (!File::exists($packageRoutesPath)) {
+            warning("Stub for Webhook route not found. Skipping.");
             return;
         }
 
-        File::ensureDirectoryExists(app_path('Models'));
-        File::copy($packageModelPath, $modelPath);
-        info("Published MailerEvent model to app/Models.");
+        File::ensureDirectoryExists(base_path('routes'));
+        File::copy($packageRoutesPath, $routesPath);
+        info("Published Webhook route to routes/web.php.");
+    }
+
+    protected function publishMailerController()
+    {
+        $controllerPath = app_path('Http/Controllers/WebhookController.php');
+        $packageControllerPath = __DIR__.'/../../stubs/WebhookController.php.stub';
+
+        if (File::exists($controllerPath)) {
+            warning("WebhookController already exists in app/Http/Controllers. Skipping.");
+            return;
+        }
+
+        if (!File::exists($packageControllerPath)) {
+            warning("Stub for WebhookController not found. Skipping.");
+            return;
+        }
+
+        File::ensureDirectoryExists(app_path('Http/Controllers'));
+        File::copy($packageControllerPath, $controllerPath);
+        info("Published WebhookController to app/Http/Controllers.");
+    }
+
+    protected function publishEventsListeners()
+    {
+        $stubPath = __DIR__ . '/../../stubs';
+        $eventStubPath = $stubPath . '/Events';
+        $listenerStubPath = $stubPath . '/Listeners';
+
+        $eventTargetPath = app_path('Events');
+        $listenerTargetPath = app_path('Listeners');
+
+        // Ensure directories exist
+        File::ensureDirectoryExists($eventTargetPath);
+        File::ensureDirectoryExists($listenerTargetPath);
+
+        // Copy events
+        $eventFiles = File::files($eventStubPath);
+        foreach ($eventFiles as $file) {
+            File::copy($file->getRealPath(), $eventTargetPath . '/' . $file->getFilename());
+            info("Copied: {$file->getFilename()} to Events directory.");
+        }
+
+        // Copy listeners
+        $listenerFiles = File::files($listenerStubPath);
+        foreach ($listenerFiles as $file) {
+            File::copy($file->getRealPath(), $listenerTargetPath . '/' . $file->getFilename());
+            info("Copied: {$file->getFilename()} to Listeners directory.");
+        }
     }
 
     protected function updateMailConfig()
