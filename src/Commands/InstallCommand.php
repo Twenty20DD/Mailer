@@ -52,6 +52,10 @@ class InstallCommand extends Command
         // Copy the Webhook Controller
         $this->publishMailerController();
 
+        $this->publishMigration();
+
+        $this->publishModel();
+
         // Inject the webhook route into web.php
         $this->publishRoutes();
 
@@ -81,6 +85,34 @@ class InstallCommand extends Command
         $command = 'composer require ' . $package;
         info("Running: {$command}");
         passthru($command);
+    }
+
+    protected function publishMigration()
+    {
+        $stubPath = __DIR__ . '/../../database/migrations/create_mailer_table.php.stub';
+        $migrationTargetPath = database_path('migrations/' . date('Y_m_d_His') . '_create_mailer_table.php');
+
+        if (!File::exists($migrationTargetPath)) {
+            File::copy($stubPath, $migrationTargetPath);
+            $this->info("Migration published: " . basename($migrationTargetPath));
+        } else {
+            $this->warn('Migration already exists. Skipping.');
+        }
+    }
+
+    protected function publishModel()
+    {
+        $stubPath = __DIR__ . '/../../stubs/MailerEvent.php.stub';
+        $modelTargetPath = app_path('Models/MailerEvent.php');
+
+        File::ensureDirectoryExists(app_path('Models'));
+
+        if (!File::exists($modelTargetPath)) {
+            File::copy($stubPath, $modelTargetPath);
+            $this->info('MailerEvent model published to app/Models');
+        } else {
+            $this->warn('MailerEvent model already exists. Skipping.');
+        }
     }
 
     protected function publishRoutes()
