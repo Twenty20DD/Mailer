@@ -13,7 +13,7 @@ class Mailer
 
     protected array $providerConfig;
 
-    protected ?SesClient $sesClient;
+    // protected ?SesClient $sesClient;
 
 
     public function __construct(array $config)
