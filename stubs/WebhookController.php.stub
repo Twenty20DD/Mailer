@@ -7,8 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use App\Models\MailerEvent;
 use App\Events\EmailBounced;
-use App\Events\EmailDelivered;
 use App\Events\EmailDeferred;
+use App\Events\EmailDelivered;
 
 class WebhookController extends Controller
 {

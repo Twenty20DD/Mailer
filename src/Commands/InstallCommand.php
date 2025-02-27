@@ -47,13 +47,12 @@ class InstallCommand extends Command
             '--force' => true,
         ]);
 
-        // Publish WebhookController
-        $this->publishMailerController();
-
-        // Publish Events and Listeners
         $this->publishEventsListeners();
 
-        //Publish Routes
+        // Copy the Webhook Controller
+        $this->publishMailerController();
+
+        // Inject the webhook route into web.php
         $this->publishRoutes();
 
         // Inject `twenty20` mailer into Laravel’s config/mail.php
@@ -68,13 +67,11 @@ class InstallCommand extends Command
         // Run migrations
         $this->callSilent('migrate');
 
-        $this->callSilent('optimize:clear');
+
+        passthru('composer dump-autoload');
 
         $this->callSilent('cache:clear');
-
         $this->callSilent('config:clear');
-
-        $this->callSilent('route:clear');
 
         info('🎉 Installation completed. Set your API keys in .env and start sending emails!');
     }
@@ -88,69 +85,101 @@ class InstallCommand extends Command
 
     protected function publishRoutes()
     {
-        $routesPath = base_path('routes/web.php');
-        $packageRoutesPath = __DIR__.'/routes/web.php';
+        $routeFilePath = base_path('routes/web.php');
+        $stubPath = __DIR__ . '/../../stubs/web.php.stub';
 
-        if (File::exists($routesPath)) {
-            warning("Webhook route already exists in routes/web.php. Skipping.");
+        if (!File::exists($routeFilePath)) {
+            warning('routes/web.php not found. Skipping route injection.');
             return;
         }
 
-        if (!File::exists($packageRoutesPath)) {
-            warning("Stub for Webhook route not found. Skipping.");
-            return;
+        $currentRoutes = File::get($routeFilePath);
+        $stubContents = File::get($stubPath);
+
+        preg_match('/^use .*;$/m', $stubContents, $useStatements);
+        preg_match('/Route::.*;$/m', $stubContents, $routeStatements);
+
+        $useStatement = !empty($useStatements) ? $useStatements[0] : null;
+        $routeDefinition = !empty($routeStatements) ? $routeStatements[0] : null;
+
+        if ($useStatement && !str_contains($currentRoutes, $useStatement)) {
+            if (preg_match('/^(<\?php\s*\n)(.*?)(\n\n|$)/s', $currentRoutes, $matches)) {
+                $existingUses = $matches[2];
+                $newUses = trim($existingUses . PHP_EOL . $useStatement);
+
+                $currentRoutes = preg_replace('/^(<\?php\s*\n)(.*?)(\n\n|$)/s', "<?php\n" . $newUses . "\n\n", $currentRoutes, 1);
+            } else {
+
+                $currentRoutes = preg_replace('/<\?php\s*\n/', "<?php\n\n" . $useStatement . "\n", $currentRoutes, 1);
+            }
         }
 
-        File::ensureDirectoryExists(base_path('routes'));
-        File::copy($packageRoutesPath, $routesPath);
-        info("Published Webhook route to routes/web.php.");
+        if ($routeDefinition && !str_contains($currentRoutes, $routeDefinition)) {
+            $currentRoutes .= PHP_EOL . PHP_EOL . $routeDefinition;
+        }
+
+        File::put($routeFilePath, $currentRoutes);
+        info('Webhook route successfully added to routes/web.php');
     }
 
     protected function publishMailerController()
     {
-        $controllerPath = app_path('Http/Controllers/WebhookController.php');
-        $packageControllerPath = __DIR__.'/../../stubs/WebhookController.php.stub';
-
-        if (File::exists($controllerPath)) {
-            warning("WebhookController already exists in app/Http/Controllers. Skipping.");
-            return;
+        $stubPath = __DIR__ . '/../../stubs/WebhookController.php.stub';
+        $targetPath = app_path('Http/Controllers/WebhookController.php');
+        if (!File::exists($targetPath)) {
+            File::copy($stubPath, $targetPath);
+            info('WebhookController.php has been published to app/Http/Controllers');
+        } else {
+            warning('WebhookController.php already exists. Skipping.');
         }
 
-        if (!File::exists($packageControllerPath)) {
-            warning("Stub for WebhookController not found. Skipping.");
-            return;
-        }
-
-        File::ensureDirectoryExists(app_path('Http/Controllers'));
-        File::copy($packageControllerPath, $controllerPath);
         info("Published WebhookController to app/Http/Controllers.");
     }
 
     protected function publishEventsListeners()
     {
         $stubPath = __DIR__ . '/../../stubs';
-        $eventStubPath = $stubPath . '/Events';
-        $listenerStubPath = $stubPath . '/Listeners';
+        $eventStubPath = $stubPath . '/events';
+        $listenerStubPath = $stubPath . '/listeners';
 
         $eventTargetPath = app_path('Events');
         $listenerTargetPath = app_path('Listeners');
 
-        // Ensure directories exist
         File::ensureDirectoryExists($eventTargetPath);
         File::ensureDirectoryExists($listenerTargetPath);
 
-        // Copy events
         $eventFiles = File::files($eventStubPath);
         foreach ($eventFiles as $file) {
-            File::copy($file->getRealPath(), $eventTargetPath . '/' . $file->getFilename());
-            info("Copied: {$file->getFilename()} to Events directory.");
+            $fileContents = File::get($file->getRealPath());
+
+            $fileContents = str_replace('NamespacePlaceholder', 'App\Events', $fileContents);
+
+            // Remove .stub extension from filename
+            $fileName = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+            $fileName = str_replace('.stub', '', $fileName);
+
+            $targetFile = $eventTargetPath . '/' . $fileName;
+
+            File::put($targetFile, $fileContents);
+
+            $this->info("Copied: {$file->getFilename()} as " . basename($targetFile));
         }
 
-        // Copy listeners
         $listenerFiles = File::files($listenerStubPath);
         foreach ($listenerFiles as $file) {
-            File::copy($file->getRealPath(), $listenerTargetPath . '/' . $file->getFilename());
-            info("Copied: {$file->getFilename()} to Listeners directory.");
+            $fileContents = File::get($file->getRealPath());
+
+            $fileContents = str_replace('NamespacePlaceholder', 'App\Listeners', $fileContents);
+
+            // Remove .stub extension from filename
+            $fileName = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+            $fileName = str_replace('.stub', '', $fileName);
+
+            $targetFile = $listenerTargetPath . '/' . $fileName;
+
+            File::put($targetFile, $fileContents);
+
+            $this->info("Copied: {$file->getFilename()} as " . basename($targetFile));
         }
     }
 

@@ -47,20 +47,30 @@ protected $listen = [
 ];
 ```
 
-For Laravel 12 you can register events and their corresponding listeners within the `boot` method of your application's `AppServiceProvider`:
+For Laravel 11 & above you can register events and their corresponding listeners within the `boot` method of your application's `AppServiceProvider`:
 
 ```php
 public function boot(): void
 {
-     Event::listen(
+    Event::listen(
         EmailBounced::class,
         EmailBouncedListener::class,
-        ...
+    );
+    Event::listen(
+        EmailDelivered::class,
+        EmailDeliveredListener::class,
+    );
+    Event::listen(
+        EmailDeferred::class,
+        EmailDeferredListener::class
     );
 }
 ```
 
-These events will be triggered from the WebhookController that package also installs.
+> [!NOTE]
+> However Laravel 11 and above should auto discover these events.
+
+These events will be triggered from the WebhookController.
 
 Each listeners show an example how you can use this.
 
@@ -72,6 +82,8 @@ Log::warning("Email bounced: {$event->email} | Provider: {$event->provider} | Re
 // - Sending a notification to the user/admin
 // - Updating the user's status if needed
 ```
+
+You will need to run `php artisan queue:work` to see any events in the logs whilst testing locally.
 
 Lastly within your VerifyCSRFToken middleware, add the following:
 
