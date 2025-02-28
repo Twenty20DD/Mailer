@@ -33,7 +33,9 @@ class Twenty20Transport extends AbstractTransport
         $headers = $email->getHeaders();
         $metadata = $headers->toArray();
 
-        $this->mailer->sendMail($to, $from, $subject, $body, [], [], [], $metadata);
+        $newArray = array_slice($metadata, 3);
+
+        $this->mailer->sendMail($to, $from, $subject, $body, [], [], [], $newArray);
     }
 
     public function __toString(): string

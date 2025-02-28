@@ -41,9 +41,9 @@ class WebhookController extends Controller
             ]);
 
             match ($mailerEvent->event_type) {
-                'bounce' => event(new EmailBounced($mailerEvent->email, 'sendgrid', $mailerEvent->reason)),
-                'deferred' => event(new EmailDeferred($mailerEvent->email, 'sendgrid', $mailerEvent->reason)),
-                'delivered' => event(new EmailDelivered($mailerEvent->email, 'sendgrid')),
+                'bounce' => event(new EmailBounced($payload, 'sendgrid', $mailerEvent->reason)),
+                'deferred' => event(new EmailDeferred($payload, 'sendgrid', $mailerEvent->reason)),
+                'delivered' => event(new EmailDelivered($payload, 'sendgrid')),
                 default => null,
             };
         }

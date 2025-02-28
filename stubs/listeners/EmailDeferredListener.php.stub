@@ -18,10 +18,5 @@ class EmailDeferredListener implements ShouldQueue
     {
         // Log the bounced email
         Log::warning("Email deferred: {$event->email} | Provider: {$event->provider} | Reason: {$event->reason}");
-
-        // Here you can implement additional logic, such as:
-        // - Marking the email as invalid in the database
-        // - Sending a notification to the user/admin
-        // - Updating the user's status if needed
     }
 }

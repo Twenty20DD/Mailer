@@ -18,10 +18,5 @@ class EmailDeliveredListener implements ShouldQueue
     {
         // Log the delivered email
         Log::info("Email delivered: {$event->email} | Provider: {$event->provider}");
-
-        // Here you can implement additional logic, such as:
-        // - Updating email status in the database
-        // - Sending a confirmation to the sender
-        // - Notifying the user that their email was successfully sent
     }
 }

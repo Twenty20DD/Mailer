@@ -14,13 +14,13 @@ class EmailDeferred
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public string $email;
+    public array $payload;
     public string $provider;
     public ?string $reason;
 
-    public function __construct(string $email, string $provider, ?string $reason)
+    public function __construct(array $payload, string $provider, ?string $reason)
     {
-        $this->email = $email;
+        $this->payload = $payload;
         $this->provider = $provider;
         $this->reason = $reason;
     }
