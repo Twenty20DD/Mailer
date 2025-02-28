@@ -1,0 +1,25 @@
+<?php
+
+namespace NamespacePlaceholder;
+
+use Illuminate\Broadcasting\Channel;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PresenceChannel;
+use Illuminate\Broadcasting\PrivateChannel;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+
+class EmailClick
+{
+    use Dispatchable, InteractsWithSockets, SerializesModels;
+
+    public array $payload;
+    public string $provider;
+
+    public function __construct(array $payload, string $provider)
+    {
+        $this->payload = $payload;
+        $this->provider = $provider;
+    }
+}

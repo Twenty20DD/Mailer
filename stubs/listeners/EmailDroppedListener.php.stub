@@ -2,19 +2,19 @@
 
 namespace NamespacePlaceholder;
 
-use App\Events\EmailDeferred;
+use App\Events\EmailDropped;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
 
-class EmailDeferredListener implements ShouldQueue
+class EmailDroppedListener implements ShouldQueue
 {
     use InteractsWithQueue;
 
     /**
      * Handle the event.
      */
-    public function handle(EmailDeferred $event): void
+    public function handle(EmailDropped $event): void
     {
         //
     }

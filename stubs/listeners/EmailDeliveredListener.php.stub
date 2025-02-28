@@ -16,7 +16,6 @@ class EmailDeliveredListener implements ShouldQueue
      */
     public function handle(EmailDelivered $event): void
     {
-        // Log the delivered email
-        Log::info("Email delivered: {$event->email} | Provider: {$event->provider}");
+        //
     }
 }

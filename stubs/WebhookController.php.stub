@@ -9,6 +9,10 @@ use App\Models\MailerEvent;
 use App\Events\EmailBounced;
 use App\Events\EmailDeferred;
 use App\Events\EmailDelivered;
+use App\Events\EmailClick;
+use App\Events\EmailOpen;
+use App\Events\EmailDropped;
+use App\Events\EmailProcessed;
 
 class WebhookController extends Controller
 {
@@ -41,9 +45,13 @@ class WebhookController extends Controller
             ]);
 
             match ($mailerEvent->event_type) {
+                'open' => event(new EmailOpen($payload, 'sendgrid')),
+                'click' => event(new EmailClick($payload, 'sendgrid')),
+                'processed' => event(new EmailProcessed($payload, 'sendgrid')),
+                'delivered' => event(new EmailDelivered($payload, 'sendgrid')),
                 'bounce' => event(new EmailBounced($payload, 'sendgrid', $mailerEvent->reason)),
                 'deferred' => event(new EmailDeferred($payload, 'sendgrid', $mailerEvent->reason)),
-                'delivered' => event(new EmailDelivered($payload, 'sendgrid')),
+                'dropped' => event(new EmailDropped($payload, 'sendgrid', $mailerEvent->reason)),
                 default => null,
             };
         }

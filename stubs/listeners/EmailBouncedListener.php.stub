@@ -16,7 +16,6 @@ class EmailBouncedListener implements ShouldQueue
      */
     public function handle(EmailBounced $event): void
     {
-        // Log the bounced email
-        Log::warning("Email bounced: {$event->email} | Provider: {$event->provider} | Reason: {$event->reason}");
+        //
     }
 }

@@ -25,7 +25,7 @@ Specify the webhook URL in your choosen provider to:
 http://yourdomain.com/mailer/webhook
 ```
 
-This should already be injected into your web routes files from the package.
+`mailer/webhook` will be injected into your `web.php` routes from the installer.
 
 ### Usage
 
@@ -68,20 +68,13 @@ public function boot(): void
 ```
 
 > [!NOTE]
-> However Laravel 11 and above should auto discover these events.
+> If you have auto discover turned on, you won't need to the above.
+
+---
 
 These events will be triggered from the WebhookController.
 
-Each listeners show an example how you can use this.
-
-```php
-Log::warning("Email bounced: {$event->email} | Provider: {$event->provider} | Reason: {$event->reason}");
-
-// Here you can implement additional logic, such as:
-// - Marking the email as invalid in the database
-// - Sending a notification to the user/admin
-// - Updating the user's status if needed
-```
+Package ships with Listeners for each event which allows you to hook into and handle as required.
 
 You will need to run `php artisan queue:work` to see any events in the logs whilst testing locally.
 
