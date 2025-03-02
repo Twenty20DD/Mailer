@@ -44,6 +44,7 @@ protected $listen = [
     EmailDeferred::class => [
         EmailDeferredListener::class,
     ],
+    ....
 ];
 ```
 
@@ -64,11 +65,9 @@ public function boot(): void
         EmailDeferred::class,
         EmailDeferredListener::class
     );
+    ....
 }
 ```
-
-> [!NOTE]
-> If you have auto discover turned on, you won't need to the above.
 
 ---
 
