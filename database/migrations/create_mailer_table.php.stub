@@ -14,7 +14,7 @@ return new class extends Migration
             $table->string('email')->nullable();
             $table->string('event_type')->nullable();
             $table->text('reason')->nullable();
-            $table->string('message_id')->unique();
+            $table->string('message_id')->nullable();
             $table->timestamp('event_at')->nullable();
             $table->timestamps();
         });

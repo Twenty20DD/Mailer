@@ -13,9 +13,6 @@ class Mailer
 
     protected array $providerConfig;
 
-    // protected ?SesClient $sesClient;
-
-
     public function __construct(array $config)
     {
         $this->provider = $config['provider'] ?? 'sendgrid';
@@ -26,19 +23,22 @@ class Mailer
         }
     }
 
-    public function sendMail(string $to, string $from, string $subject, string $body, array $cc = [], array $bcc = [], array $replyTo = [], array $metadata = [])
+    public function sendMail(string $to, array $from, string $subject, string $body, array $cc = [], array $bcc = [], array $replyTo = [], array $metadata = [])
     {
+        if (is_string($from)) {
+            $from = ['email' => $from, 'name' => ''];
+        }
         return match ($this->provider) {
             'sendgrid' => $this->sendViaSendGrid($to, $from, $subject, $body, $cc, $bcc, $replyTo, $metadata),
-            // 'amazon_ses' => $this->sendViaAmazonSes($to, $from, $subject, $body, $cc, $bcc, $replyTo),
             default => throw new \RuntimeException("Unsupported provider [{$this->provider}]."),
         };
     }
 
-    protected function sendViaSendGrid(string $to, string $from, string $subject, string $body, array $cc, array $bcc, array $replyTo, array $metadata)
+    protected function sendViaSendGrid(string $to, array $from, string $subject, string $body, array $cc, array $bcc, array $replyTo, array $metadata)
     {
         $email = new SendGridMail();
-        $email->setFrom($from);
+        $email->setFrom($from['email'], $from['name']);
+        $email->setSubject($subject);
         $email->setSubject($subject);
         $email->addTo($to);
         $email->addContent('text/plain', strip_tags($body));
