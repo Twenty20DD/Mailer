@@ -23,18 +23,18 @@ class Mailer
         }
     }
 
-    public function sendMail(string $to, array $from, string $subject, string $body, array $cc = [], array $bcc = [], array $replyTo = [], array $metadata = [])
+    public function sendMail(string $to, array|string $from, string $subject, string $body, array $cc = [], array $bcc = [], array $replyTo = [], array $metadata = [], $attachments = [])
     {
         if (is_string($from)) {
             $from = ['email' => $from, 'name' => ''];
         }
         return match ($this->provider) {
-            'sendgrid' => $this->sendViaSendGrid($to, $from, $subject, $body, $cc, $bcc, $replyTo, $metadata),
+            'sendgrid' => $this->sendViaSendGrid($to, $from, $subject, $body, $cc, $bcc, $replyTo, $metadata, $attachments),
             default => throw new \RuntimeException("Unsupported provider [{$this->provider}]."),
         };
     }
 
-    protected function sendViaSendGrid(string $to, array $from, string $subject, string $body, array $cc, array $bcc, array $replyTo, array $metadata)
+    protected function sendViaSendGrid(string $to, array $from, string $subject, string $body, array $cc, array $bcc, array $replyTo, array $metadata, array $attachments)
     {
         $email = new SendGridMail();
         $email->setFrom($from['email'], $from['name']);
@@ -44,6 +44,9 @@ class Mailer
         $email->addContent('text/plain', strip_tags($body));
         $email->addContent('text/html', $body);
         $email->addCustomArg('sent_via', json_encode($metadata));
+        foreach ($attachments as $attachment) {
+            $email->addAttachment($attachment['path'], $attachment['type'], $attachment['name']);
+        }
 
         foreach ($cc as $ccEmail) {
             $email->addCc($ccEmail);

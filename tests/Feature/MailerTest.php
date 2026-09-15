@@ -114,3 +114,91 @@ test('it handles an undelivered email response', function () {
 
     $this->fail('Expected RuntimeException was not thrown.');
 });
+
+test('it sends an email via SendGrid with an attachment', function () {
+    Http::fake([
+        'https://api.sendgrid.com/v3/mail/send' => Http::response(['message' => 'success'], 202),
+    ]);
+
+    $this->mailer->sendMail(
+        to: 'recipient@example.com',
+        from: 'sender@example.com',
+        subject: 'Test Subject With Attachment',
+        body: '<p>Hello World</p>',
+        attachments: [
+            [
+                'path' => base64_encode('file contents here'),
+                'type' => 'application/pdf',
+                'name' => 'invoice.pdf',
+            ],
+        ]
+    );
+
+    Http::assertSent(function ($request) {
+        $data = $request->data();
+
+        $attachment = $data['attachments'][0] ?? null;
+
+        return $request->url() === 'https://api.sendgrid.com/v3/mail/send'
+            && $request->method() === 'POST'
+            && $attachment !== null
+            && method_exists($attachment, 'getContent') && $attachment->getContent() === base64_encode('file contents here')
+            && method_exists($attachment, 'getType') && $attachment->getType() === 'application/pdf'
+            && method_exists($attachment, 'getFilename') && $attachment->getFilename() === 'invoice.pdf';
+    });
+});
+
+test('it sends an email via SendGrid with multiple attachments', function () {
+    Http::fake([
+        'https://api.sendgrid.com/v3/mail/send' => Http::response(['message' => 'success'], 202),
+    ]);
+
+    $this->mailer->sendMail(
+        to: 'recipient@example.com',
+        from: 'sender@example.com',
+        subject: 'Test Subject With Multiple Attachments',
+        body: '<p>Hello World</p>',
+        attachments: [
+            [
+                'path' => base64_encode('first file'),
+                'type' => 'text/plain',
+                'name' => 'first.txt',
+            ],
+            [
+                'path' => base64_encode('second file'),
+                'type' => 'image/png',
+                'name' => 'second.png',
+            ],
+        ]
+    );
+
+    Http::assertSent(function ($request) {
+        $data = $request->data();
+
+        $attachments = $data['attachments'] ?? [];
+
+        return count($attachments) === 2
+            && $attachments[0]->getFilename() === 'first.txt'
+            && $attachments[1]->getFilename() === 'second.png';
+    });
+});
+
+test('it sends an email via SendGrid with no attachments by default', function () {
+    Http::fake([
+        'https://api.sendgrid.com/v3/mail/send' => Http::response(['message' => 'success'], 202),
+    ]);
+
+    $this->mailer->sendMail(
+        to: 'recipient@example.com',
+        from: 'sender@example.com',
+        subject: 'Test Subject No Attachments',
+        body: '<p>Hello World</p>'
+    );
+
+    Http::assertSent(function ($request) {
+        $data = $request->data();
+
+        // SendGrid SDK typically omits the key entirely when no attachments were added
+        return ! array_key_exists('attachments', $data);
+    });
+});
