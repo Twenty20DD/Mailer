@@ -2,8 +2,10 @@
 
 namespace Twenty20\Mailer\Transport;
 
+use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\SentMessage;
+use Symfony\Component\Mime\Part\DataPart;
 use Symfony\Component\Mailer\Transport\AbstractTransport;
 use Symfony\Component\Mime\Email;
 use Twenty20\Mailer\Mailer;
@@ -39,7 +41,13 @@ class Twenty20Transport extends AbstractTransport
 
         $newArray = array_slice($metadata, 3);
 
-        $this->mailer->sendMail($to, $from, $subject, $body, $ccEmail, $bccEmail, $replyToEmail, $newArray);
+        $attachments = array_map(fn(DataPart $part) => [
+            'path' => base64_encode($part->getBody()),
+            'type' => $part->getMediaType() . '/' . $part->getMediaSubtype(),
+            'name' => $part->getFilename() ?? Str::random(10),
+        ], $email->getAttachments());
+
+        $this->mailer->sendMail($to, $from, $subject, $body, $ccEmail, $bccEmail, $replyToEmail, $newArray, $attachments);
     }
 
     private function formatSendGridFrom(array $addresses): array
